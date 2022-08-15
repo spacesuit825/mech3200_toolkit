@@ -5,13 +5,14 @@ import matplotlib as mpl
 import scipy.signal as signal
 
 def rayleigh_damping(M, K, alpha, beta):
+    assert len(M) == len(K)
     C = alpha*M + beta*K
     return C
 
-M = np.array([[5, 0], [0, 2]])
-K = np.array([[25, -3], [-3, 20]])
+M = np.array([[5, 0], [0, 2]]) # Change these arrays to achieve different systems. Should scale to any DOF but i havent checked that yet.
+K = np.array([[25, -3], [-3, 20], [0, 3]]) #
 
-alpha = -1.2
+alpha = -1.2 # Controls the linear combination that forms the damping matrix.
 beta = 0.3
 
 C = rayleigh_damping(M, K, alpha, beta)
@@ -43,6 +44,8 @@ class BasicSystem:
         self.lti = None
 
         self.n = len(M)
+
+        assert len(M) == len(K)
 
         self.compute_sys()
         print(f'{self.n} dimensional system solved!\n')
@@ -106,7 +109,6 @@ class BasicSystem:
         neg = [i for i in ind[:len(a) // 2]]
 
         idx = np.array([pos, neg]).flatten()
-
         return idx
 
     def compute_eigen(self):
@@ -126,6 +128,7 @@ class BasicSystem:
             return self.eigenvectors
 
     def absorption(self):
+        # TODO: Add way to calculate absorber mass and spring stiffness automagically.
         pass
 
     def linear_time_system(self):
