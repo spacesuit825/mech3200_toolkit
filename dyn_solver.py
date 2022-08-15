@@ -10,7 +10,7 @@ def rayleigh_damping(M, K, alpha, beta):
     return C
 
 M = np.array([[5, 0], [0, 2]]) # Change these arrays to achieve different systems. Should scale to any DOF but i havent checked that yet.
-K = np.array([[25, -3], [-3, 20], [0, 3]]) #
+K = np.array([[25, -3], [-3, 20]]) #
 
 alpha = -1.2 # Controls the linear combination that forms the damping matrix.
 beta = 0.3
