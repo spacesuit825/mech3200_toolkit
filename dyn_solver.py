@@ -13,7 +13,7 @@ M = np.array([[5, 0], [0, 2]]) # Change these arrays to achieve different system
 K = np.array([[25, -3], [-3, 20]]) #
 
 alpha = -1.2 # Controls the linear combination that forms the damping matrix.
-beta = 0.3
+beta = 0.3 #
 
 C = rayleigh_damping(M, K, alpha, beta)
 
@@ -76,7 +76,7 @@ class BasicSystem:
     def set_K(self, K: np.array):
         self.K = K
         self.compute_sys()
-    
+
     def compute_sys(self):
         if self.C is None:
             L = la.cholesky(self.M)
@@ -152,6 +152,18 @@ class BasicSystem:
 
     def time_response(self, F, t, ic = None):
         return signal.lsim(self.lti, F, t, X0=ic)
+
+    def stepper(self, t, y):
+        F = np.sin(2*np.pi*t)
+        A0 = np.zeros((self.n, self.n))
+        print(A0.shape)
+
+        FF1 = np.block([[A0], [la.inv(self.M)]])
+        print(FF1.shape)
+        FF2 = np.array([[0], [F]])
+        FF = np.dot(FF1, FF2)
+        print(FF.shape)
+        return np.dot(self.state_space(), y) + FF
 
     def frequency_response(self, F = None, w = None, modes = None):
         rows = self.lti.inputs
@@ -231,7 +243,7 @@ class BasicSystem:
 
         return ax0, ax1
 
-    def plot_time_response(self, F, t, ic=None, out=None, ax=None):
+    def plot_time_response(self, F, time, y=None, out=None, ax=None):
         if ax is None:
             fig, axs = plt.subplots(self.lti.outputs, 1, sharex=True)
 
@@ -240,21 +252,16 @@ class BasicSystem:
 
         if out is not None:
             raise NotImplementedError('Not implemented yet for specific outputs.')
+        
+        disp = []
+        for t in time:
+            yout = self.stepper(t, y)
+            print(yout[-1, 1:2])
+            disp.append(yout[-1, 1:2])
 
-        t, yout, xout = self.time_response(F, t, ic=ic)
-
+        total = np.block(disp)
         for i, ax in enumerate(axs):
-            ax.plot(t, yout[:, i])
-
-        # set the same y limits
-        min_ = min([ax.get_ylim()[0] for ax in axs])
-        max_ = max([ax.get_ylim()[1] for ax in axs])
-        lim = max(abs(min_), max_)
-
-        for i, ax in enumerate(axs):
-            ax.set_ylim([-lim, lim])
-            ax.set_xlim(t[0], t[-1])
-            ax.set_ylabel('Amp. output %s (m)' % i, fontsize=8)
+            ax.plot(time, total)
 
         axs[-1].set_xlabel('Time (s)')
 
@@ -262,3 +269,13 @@ class BasicSystem:
 
 sys = BasicSystem(M, K, C)
 
+#t = np.linspace(0, 100, 1000)
+#F = np.sin(2 * np.pi * t)
+#ic = [0.1, 0, 0, 1]
+#sys.plot_time_response(F, t, y = ic)
+#plt.show()
+
+# You can also plot frequency response with sys.frequency_response()
+# and time response with sys.plot_time_response(F: np.array, t: np.array, ic = np.array, optional)
+
+# F array must have the same length as t array. IC's for the state space can be specified as an array.
