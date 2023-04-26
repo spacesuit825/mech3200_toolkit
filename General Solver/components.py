@@ -68,4 +68,32 @@ class Connector(Component):
     def get_symbols(self):
         return [self.q, self.dq]
 
+class Spring(Component):
+    def __init__(self, parent, length, k):
+        self.parent = parent
+        self.length = length
+        self.k = k
+
+    def setup(self, i, t):
+        self.t = t
+        self.x = i
+        self.q1 = dynamicsymbols(f'q{i}')
+        self.dq1 = dynamicsymbols(f'q{i}', 1)
+        i += 1
+
+        self.angle = i
+        self.q2 = dynamicsymbols(f'q{i}')
+        self.dq2 = dynamicsymbols(f'q{i}', 1)
+        i += 1
+        return i
+
+    def potential(self, g):
+        return 0.5*self.k*self.q1**2
     
+    def get_position(self):
+        modifier = (self.length + self.q1)
+        return [self.parent.get_position()[0] + modifier*sp.sin(self.q2),
+                self.parent.get_position()[1] - modifier*sp.cos(self.q2)]
+
+    def get_symbols(self):
+        return [self.q1, self.dq1, self.q2, self.dq2]
